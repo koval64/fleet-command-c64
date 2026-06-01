@@ -517,7 +517,7 @@ body {
 
   .boards.phase-player .board,
   .boards.phase-ai .board {
-    width: min(calc(100dvw - 8px), calc(100dvh - 120px));
+    width: min(300px, calc(100dvw - 90px), calc(100dvh - 170px));
   }
 
   .board-wrap {
