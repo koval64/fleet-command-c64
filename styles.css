@@ -28,6 +28,31 @@ body {
   overflow-y: auto;
 }
 
+.boards.menu-view {
+  visibility: visible;
+  display: grid;
+  grid-template-columns: 1fr;
+  justify-items: center;
+}
+
+.boards.menu-view #enemy-wrap {
+  display: none;
+}
+
+.boards.menu-view #player-wrap {
+  display: block;
+  width: fit-content;
+  margin: 0 auto;
+}
+
+.boards.menu-view .board {
+  width: min(calc(100dvh - 160px), calc(100vw - 24px));
+}
+
+.boards.menu-view .end-scroll-controls {
+  display: none !important;
+}
+
 .bg-grid {
   position: fixed;
   inset: 0;
@@ -121,25 +146,12 @@ body {
   max-width: 100%;
   min-height: 46px;
   flex-wrap: nowrap;
-}
-
-.difficulty-label {
-  font-size: 0.86rem;
-  font-weight: 700;
-  color: var(--accent);
-}
-
-#difficulty-select {
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  border-radius: 8px;
-  background: rgba(6, 15, 24, 0.85);
-  color: var(--text);
-  font-size: 0.84rem;
-  padding: 6px 8px;
-  outline: none;
+  overflow: hidden;
 }
 
 .hud-status {
+  flex: 1 1 0;
+  min-width: 0;
   font-size: 1rem;
   font-weight: 700;
   margin-left: 2px;
@@ -157,6 +169,7 @@ body {
 }
 
 .boards {
+  position: relative;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 2px;
@@ -191,12 +204,80 @@ body {
   display: none;
 }
 
+.boards.menu-view.phase-player #player-wrap,
+.boards.menu-view.phase-ai #player-wrap,
+.boards.menu-view.phase-done #player-wrap {
+  display: block;
+}
+
 .boards.phase-ai #enemy-wrap {
   display: none;
 }
 
 .boards.phase-done {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  display: block;
+  overflow: visible;
+  padding-bottom: 58px;
+}
+
+.end-panels {
+  display: contents;
+}
+
+.boards.phase-done .end-panels {
+  display: block;
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+.boards.phase-done .end-panels .board-wrap {
+  display: none;
+  width: min(100%, calc(100vw - 24px), calc(100dvh - 120px));
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+.boards.phase-done .end-panels .board {
+  width: 100%;
+}
+
+.boards.phase-done.end-view-player .end-panels #player-wrap,
+.boards.phase-done.end-view-enemy .end-panels #enemy-wrap {
+  display: block;
+}
+
+.end-scroll-controls {
+  position: absolute;
+  left: 0;
+  transform: none;
+  width: 100%;
+  display: none;
+  pointer-events: none;
+  top: auto;
+  bottom: -52px;
+  height: 42px;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 0;
+}
+
+.boards.phase-done .end-scroll-controls {
+  display: flex;
+}
+
+.end-scroll-btn {
+  pointer-events: auto;
+  border: 0;
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #222;
+  font-size: 1.2rem;
+  font-weight: 700;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.24);
 }
 
 .board-wrap {
@@ -279,6 +360,33 @@ body {
 
 .cell.hit {
   background: radial-gradient(circle at 50% 50%, #ffb4b9, var(--hit));
+}
+
+.cell.sunk {
+  position: relative;
+  background: linear-gradient(180deg, #2f343d, #1a1d23);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.5);
+}
+
+.cell.sunk::before,
+.cell.sunk::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 78%;
+  height: 2px;
+  background: rgba(255, 235, 235, 0.92);
+  transform-origin: center;
+  pointer-events: none;
+}
+
+.cell.sunk::before {
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.cell.sunk::after {
+  transform: translate(-50%, -50%) rotate(-45deg);
 }
 
 .cell.flash-hit {
@@ -429,27 +537,109 @@ body {
   color: var(--text);
 }
 
+.start-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(4, 12, 20, 0.78);
+  backdrop-filter: blur(2px);
+}
+
+.start-overlay.hidden {
+  display: none;
+}
+
+.start-card {
+  width: fit-content;
+  max-width: calc(100vw - 28px);
+  background: var(--panel);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.start-menu-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  width: fit-content;
+  max-width: 100%;
+  justify-items: center;
+}
+
+.difficulty-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  justify-content: center;
+}
+
+.start-label {
+  font-weight: 700;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+#start-difficulty-select {
+  min-width: 140px;
+  width: auto;
+  max-width: 220px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 8px;
+  background: rgba(6, 15, 24, 0.85);
+  color: var(--text);
+  font-size: 0.92rem;
+  padding: 8px 10px;
+  outline: none;
+}
+
+#start-game-btn {
+  border: 0;
+  border-radius: 9px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #222;
+  font-weight: 700;
+  font-size: 0.9rem;
+  padding: 9px 12px;
+  cursor: pointer;
+  width: auto;
+  justify-self: center;
+}
+
+#back-to-game-btn {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 9px;
+  background: rgba(6, 15, 24, 0.85);
+  color: var(--text);
+  font-weight: 700;
+  font-size: 0.9rem;
+  padding: 9px 12px;
+  cursor: pointer;
+  width: auto;
+  justify-self: center;
+}
+
+#back-to-game-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 @media (max-width: 980px) {
   .app {
     min-height: 100vh;
   }
 
   .hud-strip {
-    flex-wrap: wrap;
-    row-gap: 4px;
-  }
-
-  .difficulty-label {
-    order: 0;
-  }
-
-  #difficulty-select {
-    order: 0;
+    flex-wrap: nowrap;
   }
 
   .hud-status {
     margin-left: 0;
-    width: 100%;
     order: 1;
   }
 
@@ -474,6 +664,25 @@ body {
 
   .boards {
     grid-template-columns: 1fr;
+  }
+
+  .boards.phase-done {
+    display: block;
+  }
+
+  .boards.phase-done .end-panels {
+    display: block;
+  }
+
+  .boards.phase-done .end-panels .board {
+    width: min(100%, calc(100vw - 16px), calc(100dvh - 120px));
+  }
+
+  .end-scroll-controls {
+    top: auto;
+    bottom: -52px;
+    width: 100%;
+    padding: 0 0;
   }
 
   .board {
@@ -504,8 +713,6 @@ body {
     gap: 8px;
   }
 
-  .difficulty-label,
-  #difficulty-select,
   .hud-status {
     font-size: 0.78rem;
   }
@@ -533,6 +740,13 @@ body {
   .boards.phase-player .board,
   .boards.phase-ai .board {
     width: 100%;
+  }
+
+  .end-scroll-controls {
+    top: auto;
+    bottom: -52px;
+    width: 100%;
+    padding: 0 0;
   }
 
   .board-wrap {
