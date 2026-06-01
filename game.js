@@ -1,4 +1,4 @@
-const GRID_SIZE = 12;
+const GRID_SIZE = 10;
 const BOARD_CELLS = GRID_SIZE * GRID_SIZE;
 const SHOTS_PER_SHIP = 4;
 const SHIP_LENGTHS = [6, 5, 4, 3, 2];
