@@ -1,4 +1,4 @@
-const GRID_SIZE = 20;
+const GRID_SIZE = 16;
 const BOARD_CELLS = GRID_SIZE * GRID_SIZE;
 const SHOTS_PER_SHIP = 4;
 const SHIP_LENGTHS = [6, 5, 4, 3, 2];
@@ -17,7 +17,7 @@ const state = {
   over: false,
   aiTargetQueue: [],
   aiDifficulty: "normal",
-  lastShotEffect: null,
+  lastShotEffects: [],
   playerShotPlan: [],
   resolvingPlayerBarrage: false,
 };
@@ -53,7 +53,7 @@ ui.rematchBtn.addEventListener("click", initGame);
 ui.closeOverlayBtn.addEventListener("click", hideEndOverlay);
 ui.difficultySelect.addEventListener("change", () => {
   state.aiDifficulty = ui.difficultySelect.value;
-  setStatus(`AI difficulty set to ${capitalize(state.aiDifficulty)}. Start a new round when ready.`);
+  setStatus(`Enemy difficulty set to ${capitalize(state.aiDifficulty)}. Start a new round when ready.`);
 });
 ui.enemyBoard.addEventListener("click", handleEnemyBoardClick);
 window.addEventListener("resize", syncHudWidth);
@@ -77,7 +77,7 @@ function initGame() {
   state.over = false;
   state.aiTargetQueue = [];
   state.aiDifficulty = ui.difficultySelect.value;
-  state.lastShotEffect = null;
+  state.lastShotEffects = [];
   state.playerShotPlan = [];
   state.resolvingPlayerBarrage = false;
 
@@ -244,7 +244,7 @@ function resolvePlayerBarrage() {
     state.resolvingPlayerBarrage = false;
     state.phase = "ai";
     state.salvos.ai = getPhaseSalvos(state.enemyFleet);
-    setStatus(`AI phase: the computer fires ${state.salvos.ai} shots.`);
+    setStatus(`Enemy phase: the opponent fires ${state.salvos.ai} shots.`);
     renderHud();
     setTimeout(runAiBarrage, 500);
     return;
@@ -265,11 +265,11 @@ function resolvePlayerBarrage() {
     playSfx("miss");
   }
 
-  state.lastShotEffect = {
+  state.lastShotEffects = [{
     target: "enemy",
     idx,
     kind: result.sunkShip ? "sunk" : result.hit ? "hit" : "miss",
-  };
+  }];
 
   if (result.sunkShip) {
     state.sunk.player += 1;
@@ -305,56 +305,32 @@ function runAiBarrage() {
     return;
   }
 
-  const idx = pickAiTarget();
-  const result = resolveShot("ai", idx);
-
-  if (!result.valid) {
-    runAiBarrage();
-    return;
-  }
-
-  state.salvos.ai -= 1;
-
-  if (result.hit) {
-    state.hits.ai += 1;
-    enqueueNeighborTargets(idx);
-    playSfx(result.sunkShip ? "sunk" : "hit");
-  } else {
-    playSfx("miss");
-  }
-
-  state.lastShotEffect = {
-    target: "player",
-    idx,
-    kind: result.sunkShip ? "sunk" : result.hit ? "hit" : "miss",
-  };
-
-  if (result.sunkShip) {
-    state.sunk.ai += 1;
-    state.aiTargetQueue = [];
-    state.salvos.player = getPhaseSalvos(state.playerFleet);
-  }
-
-  renderBoards();
+  const barragePlan = buildEnemyBarragePlan(state.salvos.ai);
+  setStatus(`Enemy phase: the opponent fires ${barragePlan.length} shots.`);
   renderHud();
 
-  if (checkGameEnd()) {
-    return;
-  }
+  setTimeout(() => {
+    if (state.over) {
+      return;
+    }
 
-  const summary = result.sunkShip
-    ? `AI sinks your ${result.sunkShip.length}-deck ship. AI shots left: ${state.salvos.ai}`
-    : result.hit
-      ? `AI hits. AI shots left: ${state.salvos.ai}`
-      : `AI misses. AI shots left: ${state.salvos.ai}`;
+    const barrageResults = barragePlan.map((idx) => peekShotResult("ai", idx));
+    const summary = applyEnemyBarrageResults(barrageResults);
 
-  setStatus(summary);
+    if (state.over) {
+      return;
+    }
 
-  if (state.salvos.ai > 0) {
-    setTimeout(runAiBarrage, 170);
-  } else {
-    startPlayerPhase();
-  }
+    renderBoards();
+    renderHud();
+
+    if (checkGameEnd()) {
+      return;
+    }
+
+    setStatus(summary);
+    setTimeout(startPlayerPhase, 650);
+  }, 350);
 }
 
 function startPlayerPhase() {
@@ -369,6 +345,115 @@ function startPlayerPhase() {
   state.resolvingPlayerBarrage = false;
   setStatus(`Round ${state.round}. Player phase: mark ${state.salvos.player} targets.`);
   renderHud();
+}
+
+function buildEnemyBarragePlan(shotCount) {
+  const plan = [];
+  const excluded = new Set();
+
+  for (let i = 0; i < shotCount; i += 1) {
+    const target = pickAiTarget(excluded);
+    if (target === null) {
+      break;
+    }
+
+    excluded.add(target);
+    plan.push(target);
+  }
+
+  return plan;
+}
+
+function peekShotResult(actor, idx) {
+  const board = actor === "player" ? state.enemyBoard : state.playerBoard;
+  const fleet = actor === "player" ? state.enemyFleet : state.playerFleet;
+
+  if (board[idx] === 2 || board[idx] === 3) {
+    return { valid: false, hit: false, sunkShip: null, idx };
+  }
+
+  if (board[idx] === 1) {
+    const ship = fleet.find((unit) => unit.cells.includes(idx));
+    return {
+      valid: true,
+      hit: true,
+      sunkShip: ship && ship.hits.size + 1 === ship.length ? ship : null,
+      idx,
+    };
+  }
+
+  return { valid: true, hit: false, sunkShip: null, idx };
+}
+
+function applyEnemyBarrageResults(results) {
+  let hits = 0;
+  let sunkShips = 0;
+  const revealedHits = [];
+
+  for (const result of results) {
+    if (!result.valid) {
+      continue;
+    }
+
+    if (result.hit) {
+      hits += 1;
+      state.playerBoard[result.idx] = 2;
+      revealedHits.push(result.idx);
+
+      const ship = state.playerFleet.find((unit) => unit.cells.includes(result.idx));
+      if (ship) {
+        ship.hits.add(result.idx);
+      }
+    } else {
+      state.playerBoard[result.idx] = 3;
+    }
+  }
+
+  for (const ship of state.playerFleet) {
+    if (!ship.sunk && ship.hits.size === ship.length) {
+      ship.sunk = true;
+      sunkShips += 1;
+
+      for (const idx of ship.cells) {
+        const effect = state.lastShotEffects.find(
+          (entry) => entry.target === "player" && entry.idx === idx
+        );
+        if (effect) {
+          effect.kind = "sunk";
+        }
+      }
+    }
+  }
+
+  if (hits > 0) {
+    state.hits.ai += hits;
+    for (const idx of revealedHits) {
+      enqueueNeighborTargets(idx);
+    }
+  }
+
+  if (sunkShips > 0) {
+    state.sunk.ai += sunkShips;
+  }
+
+  state.salvos.player = getPhaseSalvos(state.playerFleet);
+  state.lastShotEffects = results
+    .filter((result) => result.valid)
+    .map((result) => ({
+      target: "player",
+      idx: result.idx,
+      kind: result.hit ? (result.sunkShip ? "sunk" : "hit") : "miss",
+    }));
+
+  if (hits === 0) {
+    return "Enemy barrage complete. No hits landed.";
+  }
+
+  if (sunkShips > 0) {
+    return `Enemy barrage complete. ${hits} hit(s), ${sunkShips} ship(s) sunk.`;
+  }
+
+  return `Enemy barrage complete. ${hits} hit(s) landed.`;
 }
 
 function resolveShot(actor, idx) {
@@ -398,10 +483,10 @@ function resolveShot(actor, idx) {
   return { valid: true, hit: false, sunkShip: null };
 }
 
-function pickAiTarget() {
-  const available = getAvailablePlayerTargets();
+function pickAiTarget(excluded = new Set()) {
+  const available = getAvailablePlayerTargets(excluded);
   if (available.length === 0) {
-    return 0;
+    return null;
   }
 
   if (state.aiDifficulty === "easy") {
@@ -410,7 +495,7 @@ function pickAiTarget() {
 
   while (state.aiTargetQueue.length > 0) {
     const candidate = state.aiTargetQueue.shift();
-    if (state.playerBoard[candidate] !== 2 && state.playerBoard[candidate] !== 3) {
+    if (!excluded.has(candidate) && state.playerBoard[candidate] !== 2 && state.playerBoard[candidate] !== 3) {
       return candidate;
     }
   }
@@ -429,10 +514,10 @@ function pickAiTarget() {
   return available[randomInt(0, available.length - 1)];
 }
 
-function getAvailablePlayerTargets() {
+function getAvailablePlayerTargets(excluded = new Set()) {
   const available = [];
   for (let i = 0; i < BOARD_CELLS; i += 1) {
-    if (state.playerBoard[i] !== 2 && state.playerBoard[i] !== 3) {
+    if (!excluded.has(i) && state.playerBoard[i] !== 2 && state.playerBoard[i] !== 3) {
       available.push(i);
     }
   }
@@ -471,12 +556,12 @@ function checkGameEnd() {
   const playerAllSunk = state.playerFleet.every((ship) => ship.sunk);
 
   if (enemyAllSunk) {
-    endGame("You win! The entire AI fleet has been sunk.");
+    endGame("You win! The entire Enemy fleet has been sunk.");
     return true;
   }
 
   if (playerAllSunk) {
-    endGame("You lose. AI has sunk your entire fleet.");
+    endGame("You lose. Enemy has sunk your entire fleet.");
     return true;
   }
 
@@ -532,7 +617,7 @@ function renderBoards() {
     ui.enemyBoard.appendChild(enemyCell);
   }
 
-  state.lastShotEffect = null;
+  state.lastShotEffects = [];
 }
 
 function renderHud() {
@@ -543,8 +628,8 @@ function renderHud() {
   ui.playerSunk.textContent = String(state.sunk.player);
   ui.aiSunk.textContent = String(state.sunk.ai);
 
-  const aiPhaseActive = (state.phase === "ai" || state.resolvingPlayerBarrage) && !state.over;
-  ui.enemyWrap.classList.toggle("inactive", aiPhaseActive);
+  const enemyPhaseActive = (state.phase === "ai" || state.resolvingPlayerBarrage) && !state.over;
+  ui.enemyWrap.classList.toggle("inactive", enemyPhaseActive);
   ui.playerWrap.classList.remove("inactive");
 
   ui.boards.classList.remove("phase-player", "phase-ai", "phase-done");
@@ -566,7 +651,7 @@ function setStatus(text) {
 function showEndOverlay(message) {
   ui.endTitle.textContent = state.hits.player >= state.hits.ai ? "Victory Report" : "Defeat Report";
   ui.endMessage.textContent = message;
-  ui.endScore.textContent = `Player hits: ${state.hits.player} | AI hits: ${state.hits.ai} | Round: ${state.round}`;
+  ui.endScore.textContent = `Player hits: ${state.hits.player} | Enemy hits: ${state.hits.ai} | Round: ${state.round}`;
   ui.endOverlay.classList.remove("hidden");
 }
 
@@ -575,17 +660,18 @@ function hideEndOverlay() {
 }
 
 function applyShotEffectClass(cell, target, idx) {
-  if (!state.lastShotEffect) {
+  if (!state.lastShotEffects || state.lastShotEffects.length === 0) {
     return;
   }
 
-  if (state.lastShotEffect.target !== target || state.lastShotEffect.idx !== idx) {
+  const effect = state.lastShotEffects.find((entry) => entry.target === target && entry.idx === idx);
+  if (!effect) {
     return;
   }
 
-  if (state.lastShotEffect.kind === "hit") {
+  if (effect.kind === "hit") {
     cell.classList.add("flash-hit");
-  } else if (state.lastShotEffect.kind === "sunk") {
+  } else if (effect.kind === "sunk") {
     cell.classList.add("flash-sunk");
   }
 }

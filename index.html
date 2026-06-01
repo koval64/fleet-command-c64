@@ -17,8 +17,8 @@
     <main class="app">
       <section class="hud" aria-live="polite">
         <div class="hud-strip">
-          <label class="difficulty-label" for="difficulty-select">AI</label>
-          <select id="difficulty-select" aria-label="AI difficulty">
+          <label class="difficulty-label" for="difficulty-select">Enemy</label>
+          <select id="difficulty-select" aria-label="Enemy difficulty">
             <option value="easy">Easy</option>
             <option value="normal" selected>Normal</option>
             <option value="hard">Hard</option>
@@ -44,10 +44,10 @@
           <h3>Enemy Radar</h3>
           <div class="board enemy" id="enemy-board" aria-label="Enemy board"></div>
           <div class="board-info" aria-live="polite">
-            <span class="board-info-title">Enemy</span>
-            <span>Shots <span id="ai-salvos">20</span></span>
-            <span>Hits <span id="ai-hits">0</span></span>
-            <span>Sunk <span id="ai-sunk">0</span>/5</span>
+              <span class="board-info-title">Enemy</span>
+              <span>Shots <span id="ai-salvos">20</span></span>
+              <span>Hits <span id="ai-hits">0</span></span>
+              <span>Sunk <span id="ai-sunk">0</span>/5</span>
           </div>
         </article>
       </section>
@@ -58,7 +58,7 @@
       <div class="end-card">
         <h2 id="end-title">Battle Over</h2>
         <p id="end-message">You win!</p>
-        <p id="end-score">Player hits: 0 | AI hits: 0</p>
+        <p id="end-score">Player hits: 0 | Enemy hits: 0</p>
         <div class="end-actions">
           <button id="rematch-btn" type="button">Rematch</button>
           <button id="close-overlay-btn" type="button">Close</button>
