@@ -189,6 +189,8 @@ function handleEnemyBoardClick(event) {
     return;
   }
 
+  ensureAudioContext();
+
   const cell = event.target.closest(".cell");
   if (!cell) {
     return;
@@ -207,7 +209,7 @@ function handleEnemyBoardClick(event) {
     setStatus(
       `Target removed. Marked ${state.playerShotPlan.length}/${state.playerShotPlan.length + state.salvos.player}.`
     );
-    renderBoards();
+    cell.classList.remove("planned");
     renderHud();
     return;
   }
@@ -224,7 +226,7 @@ function handleEnemyBoardClick(event) {
     `Target locked. Marked ${state.playerShotPlan.length}/${state.playerShotPlan.length + state.salvos.player}.`
   );
 
-  renderBoards();
+  cell.classList.add("planned");
   renderHud();
 
   if (state.salvos.player === 0) {
@@ -310,12 +312,17 @@ function runAiBarrage() {
   renderHud();
 
   setTimeout(() => {
-    if (state.over) {
-      return;
-    }
+    animateEnemyBarrage(barragePlan, 0, []);
+  }, 350);
+}
 
-    const barrageResults = barragePlan.map((idx) => peekShotResult("ai", idx));
-    const summary = applyEnemyBarrageResults(barrageResults);
+function animateEnemyBarrage(plan, index, results) {
+  if (state.over) {
+    return;
+  }
+
+  if (index >= plan.length) {
+    const summary = applyEnemyBarrageResults(results);
 
     if (state.over) {
       return;
@@ -330,7 +337,38 @@ function runAiBarrage() {
 
     setStatus(summary);
     setTimeout(startPlayerPhase, 650);
-  }, 350);
+    return;
+  }
+
+  const idx = plan[index];
+  const result = resolveShot("ai", idx);
+
+  if (!result.valid) {
+    setTimeout(() => animateEnemyBarrage(plan, index + 1, results), 50);
+    return;
+  }
+
+  if (result.hit) {
+    playSfx(result.sunkShip ? "sunk" : "hit");
+  } else {
+    playSfx("miss");
+  }
+
+  state.lastShotEffects = [{
+    target: "player",
+    idx,
+    kind: result.sunkShip ? "sunk" : result.hit ? "hit" : "miss",
+  }];
+
+  results.push(result);
+  renderBoards();
+  renderHud();
+
+  if (checkGameEnd()) {
+    return;
+  }
+
+  setTimeout(() => animateEnemyBarrage(plan, index + 1, results), result.sunkShip ? 260 : 150);
 }
 
 function startPlayerPhase() {
@@ -388,7 +426,6 @@ function peekShotResult(actor, idx) {
 function applyEnemyBarrageResults(results) {
   let hits = 0;
   let sunkShips = 0;
-  const revealedHits = [];
 
   for (const result of results) {
     if (!result.valid) {
@@ -397,39 +434,16 @@ function applyEnemyBarrageResults(results) {
 
     if (result.hit) {
       hits += 1;
-      state.playerBoard[result.idx] = 2;
-      revealedHits.push(result.idx);
-
-      const ship = state.playerFleet.find((unit) => unit.cells.includes(result.idx));
-      if (ship) {
-        ship.hits.add(result.idx);
-      }
-    } else {
-      state.playerBoard[result.idx] = 3;
+      enqueueNeighborTargets(result.idx);
     }
-  }
 
-  for (const ship of state.playerFleet) {
-    if (!ship.sunk && ship.hits.size === ship.length) {
-      ship.sunk = true;
+    if (result.sunkShip) {
       sunkShips += 1;
-
-      for (const idx of ship.cells) {
-        const effect = state.lastShotEffects.find(
-          (entry) => entry.target === "player" && entry.idx === idx
-        );
-        if (effect) {
-          effect.kind = "sunk";
-        }
-      }
     }
   }
 
   if (hits > 0) {
     state.hits.ai += hits;
-    for (const idx of revealedHits) {
-      enqueueNeighborTargets(idx);
-    }
   }
 
   if (sunkShips > 0) {
@@ -437,13 +451,6 @@ function applyEnemyBarrageResults(results) {
   }
 
   state.salvos.player = getPhaseSalvos(state.playerFleet);
-  state.lastShotEffects = results
-    .filter((result) => result.valid)
-    .map((result) => ({
-      target: "player",
-      idx: result.idx,
-      kind: result.hit ? (result.sunkShip ? "sunk" : "hit") : "miss",
-    }));
 
   if (hits === 0) {
     return "Enemy barrage complete. No hits landed.";
@@ -608,10 +615,8 @@ function renderBoards() {
     } else if (state.enemyBoard[i] === 3) {
       enemyCell.classList.add("miss");
     } else {
-      const plannedIndex = state.playerShotPlan.indexOf(i);
-      if (plannedIndex >= 0) {
+      if (state.playerShotPlan.includes(i)) {
         enemyCell.classList.add("planned");
-        enemyCell.dataset.order = String(plannedIndex + 1);
       }
     }
 
@@ -677,6 +682,8 @@ function applyShotEffectClass(cell, target, idx) {
     cell.classList.add("flash-hit");
   } else if (effect.kind === "sunk") {
     cell.classList.add("flash-sunk");
+  } else if (effect.kind === "miss") {
+    cell.classList.add("flash-miss");
   }
 }
 
