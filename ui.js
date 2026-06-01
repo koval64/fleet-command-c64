@@ -10,6 +10,8 @@
     playerBoard: document.getElementById("player-board"),
     enemyBoard: document.getElementById("enemy-board"),
     status: document.getElementById("status"),
+    objectiveText: document.getElementById("objective-text"),
+    abilityStrip: document.getElementById("ability-strip"),
     playerSalvos: document.getElementById("player-salvos"),
     aiSalvos: document.getElementById("ai-salvos"),
     playerHits: document.getElementById("player-hits"),
@@ -24,8 +26,18 @@
     endScore: document.getElementById("end-score"),
     startOverlay: document.getElementById("start-overlay"),
     startDifficultySelect: document.getElementById("start-difficulty-select"),
+    startModeSelect: document.getElementById("start-mode-select"),
+    startPerkSelect: document.getElementById("start-perk-select"),
+    riskModeToggle: document.getElementById("risk-mode-toggle"),
+    dailyChallengeBtn: document.getElementById("daily-challenge-btn"),
+    profileStats: document.getElementById("profile-stats"),
+    tutorialHint: document.getElementById("tutorial-hint"),
     startGameBtn: document.getElementById("start-game-btn"),
     backToGameBtn: document.getElementById("back-to-game-btn"),
+    scanBtn: document.getElementById("scan-btn"),
+    lineBtn: document.getElementById("line-btn"),
+    mineBtn: document.getElementById("mine-btn"),
+    riskBoostBtn: document.getElementById("risk-boost-btn"),
     rematchBtn: document.getElementById("rematch-btn"),
     closeOverlayBtn: document.getElementById("close-overlay-btn"),
     endScrollControls: document.getElementById("end-scroll-controls"),
@@ -130,6 +142,10 @@
       enemyCell.classList.add("miss");
     } else if (state.playerShotPlan.includes(i)) {
       enemyCell.classList.add("planned");
+    }
+
+    if (state.scanPreview?.has(i)) {
+      enemyCell.classList.add("scan-preview");
     }
 
     if (enemySunkCells.has(i)) {

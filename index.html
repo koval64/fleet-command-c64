@@ -10,15 +10,24 @@
       href="https://fonts.googleapis.com/css2?family=Bungee&family=Chakra+Petch:wght@400;500;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css?v=20260615" />
+    <link rel="stylesheet" href="styles.css?v=20260616" />
   </head>
   <body class="menu-open">
     <div class="bg-grid" aria-hidden="true"></div>
     <main class="app">
       <section class="hud" aria-live="polite">
-        <div class="hud-strip">
-          <span class="hud-status" id="status">Twoja tura. Wybierz cele.</span>
-          <button id="new-game-btn" type="button">Menu</button>
+        <div class="hud-stack">
+          <div class="hud-strip">
+            <span class="hud-status" id="status">Twoja tura. Wybierz cele.</span>
+            <button id="new-game-btn" type="button">Menu</button>
+          </div>
+          <div class="ability-strip" id="ability-strip">
+            <button id="scan-btn" type="button">Skan 3x3 (1)</button>
+            <button id="line-btn" type="button">Salwa liniowa (1)</button>
+            <button id="mine-btn" type="button">Mina (1)</button>
+            <button id="risk-boost-btn" type="button">Podbij ryzyko</button>
+            <span class="objective" id="objective-text">Cel rundy: traf 2 razy (+1 salwa)</span>
+          </div>
         </div>
       </section>
 
@@ -66,8 +75,33 @@
               <option value="hard">Trudny</option>
             </select>
           </div>
+          <div class="difficulty-line">
+            <label class="start-label" for="start-mode-select">Tryb:</label>
+            <select id="start-mode-select" aria-label="Tryb gry">
+              <option value="classic" selected>Klasyczny</option>
+              <option value="blitz">Blitz</option>
+              <option value="tactical">Taktyczny</option>
+            </select>
+          </div>
+          <div class="difficulty-line">
+            <label class="start-label" for="start-perk-select">Perk:</label>
+            <select id="start-perk-select" aria-label="Perk startowy">
+              <option value="none" selected>Brak</option>
+              <option value="scan">Dodatkowy skan</option>
+              <option value="line">Dodatkowa salwa liniowa</option>
+              <option value="mine">Dodatkowa mina</option>
+              <option value="salvo">+1 salwa startowa</option>
+            </select>
+          </div>
+          <label class="risk-line" for="risk-mode-toggle">
+            <input id="risk-mode-toggle" type="checkbox" />
+            Tryb ryzyka (podbicie salw kosztem kary)
+          </label>
           <button id="start-game-btn" type="button">Nowa gra</button>
+          <button id="daily-challenge-btn" type="button">Daily challenge</button>
           <button id="back-to-game-btn" type="button">Wróć</button>
+          <p class="profile-stats" id="profile-stats">Profil: 0 gier, 0 wygranych</p>
+          <p class="tutorial-hint" id="tutorial-hint">Tip: zaznacz cele klikając pola na radarze wroga.</p>
         </div>
       </div>
     </div>
@@ -84,11 +118,11 @@
       </div>
     </div>
 
-    <script src="config.js?v=20260615"></script>
-    <script src="audio.js?v=20260615"></script>
-    <script src="board.js?v=20260615"></script>
-    <script src="ai.js?v=20260615"></script>
-    <script src="ui.js?v=20260615"></script>
-    <script src="game.js?v=20260615"></script>
+    <script src="config.js?v=20260616"></script>
+    <script src="audio.js?v=20260616"></script>
+    <script src="board.js?v=20260616"></script>
+    <script src="ai.js?v=20260616"></script>
+    <script src="ui.js?v=20260616"></script>
+    <script src="game.js?v=20260616"></script>
   </body>
 </html>

@@ -36,7 +36,7 @@
   return true;
   }
 
-  function placeFleetRandom(board, shipLengths) {
+  function placeFleetRandom(board, shipLengths, rng = Math.random) {
   while (true) {
     board.fill(0);
     const fleet = [];
@@ -46,9 +46,9 @@
       let placed = false;
 
       for (let attempt = 0; attempt < 5000 && !placed; attempt += 1) {
-        const horizontal = Math.random() < 0.5;
-        const row = randomInt(0, GRID_SIZE - 1);
-        const col = randomInt(0, GRID_SIZE - 1);
+        const horizontal = rng() < 0.5;
+        const row = Math.floor(rng() * GRID_SIZE);
+        const col = Math.floor(rng() * GRID_SIZE);
         const cells = [];
 
         for (let i = 0; i < length; i += 1) {

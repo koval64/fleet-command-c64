@@ -41,6 +41,44 @@
   }
 
   if (state.aiDifficulty === "hard") {
+    const hitCells = [];
+    for (let i = 0; i < BOARD_CELLS; i += 1) {
+      if (state.playerBoard[i] === 2) {
+        const ship = state.playerFleet.find((unit) => unit.cells.includes(i));
+        if (ship && !ship.sunk) {
+          hitCells.push(i);
+        }
+      }
+    }
+
+    if (hitCells.length > 0) {
+      const weighted = [];
+      for (const candidate of available) {
+        const candidateRow = Math.floor(candidate / GRID_SIZE);
+        const candidateCol = candidate % GRID_SIZE;
+        let weight = 0;
+        for (const hit of hitCells) {
+          const hitRow = Math.floor(hit / GRID_SIZE);
+          const hitCol = hit % GRID_SIZE;
+          const dist = Math.abs(candidateRow - hitRow) + Math.abs(candidateCol - hitCol);
+          if (dist === 1) {
+            weight += 8;
+          } else if (dist === 2) {
+            weight += 3;
+          }
+        }
+        if (weight > 0) {
+          weighted.push({ idx: candidate, weight });
+        }
+      }
+
+      if (weighted.length > 0) {
+        const maxWeight = Math.max(...weighted.map((entry) => entry.weight));
+        const best = weighted.filter((entry) => entry.weight === maxWeight).map((entry) => entry.idx);
+        return best[randomInt(0, best.length - 1)];
+      }
+    }
+
     const parityTargets = available.filter((idx) => {
       const row = Math.floor(idx / GRID_SIZE);
       const col = idx % GRID_SIZE;
