@@ -1,5 +1,5 @@
-let GRID_SIZE = 16;
-let BOARD_CELLS = GRID_SIZE * GRID_SIZE;
+const GRID_SIZE = 12;
+const BOARD_CELLS = GRID_SIZE * GRID_SIZE;
 const SHOTS_PER_SHIP = 4;
 const SHIP_LENGTHS = [6, 5, 4, 3, 2];
 const INITIAL_SALVOS = SHOTS_PER_SHIP * SHIP_LENGTHS.length;
@@ -62,8 +62,6 @@ initGame();
 
 function initGame() {
   ensureAudioContext();
-  GRID_SIZE = getGridSizeForViewport();
-  BOARD_CELLS = GRID_SIZE * GRID_SIZE;
   state.playerBoard = createEmptyBoard();
   state.enemyBoard = createEmptyBoard();
   state.playerFleet = placeFleetRandom(state.playerBoard, SHIP_LENGTHS);
@@ -84,39 +82,10 @@ function initGame() {
   state.resolvingPlayerBarrage = false;
 
   hideEndOverlay();
-  applyBoardSize();
 
   renderBoards();
   renderHud();
   setStatus(`Round 1. Mark ${state.salvos.player} targets on enemy radar.`);
-}
-
-function getGridSizeForViewport() {
-  const width = window.innerWidth;
-
-  if (width <= 420) {
-    return 12;
-  }
-
-  if (width <= 500) {
-    return 13;
-  }
-
-  if (width <= 580) {
-    return 14;
-  }
-
-  if (width <= 680) {
-    return 15;
-  }
-
-  return 16;
-}
-
-function applyBoardSize() {
-  const gridValue = String(GRID_SIZE);
-  ui.playerBoard.style.setProperty("--grid-size", gridValue);
-  ui.enemyBoard.style.setProperty("--grid-size", gridValue);
 }
 
 function createEmptyBoard() {
