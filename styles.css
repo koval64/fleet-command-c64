@@ -465,3 +465,80 @@ body {
     width: min(100%, calc(100vh - 230px));
   }
 }
+
+@media (max-width: 680px) {
+  .app {
+    padding: 2px 4px 4px;
+  }
+
+  .topbar {
+    padding: 6px 8px;
+    gap: 2px 8px;
+  }
+
+  .topbar h1 {
+    font-size: 0.95rem;
+  }
+
+  .topbar p {
+    font-size: 0.72rem;
+  }
+
+  .hud-strip {
+    padding: 6px 8px;
+    gap: 8px;
+  }
+
+  .difficulty-label,
+  #difficulty-select,
+  .hud-status {
+    font-size: 0.78rem;
+  }
+
+  .hud-status {
+    line-height: 1.1;
+  }
+
+  .hud-strip #new-game-btn {
+    padding: 7px 10px;
+    font-size: 0.8rem;
+  }
+
+  .boards.phase-player,
+  .boards.phase-ai {
+    justify-items: stretch;
+  }
+
+  .boards.phase-player .board-wrap,
+  .boards.phase-ai .board-wrap {
+    width: 100%;
+    margin: 0;
+  }
+
+  .boards.phase-player .board,
+  .boards.phase-ai .board {
+    width: min(calc(100dvw - 8px), calc(100dvh - 150px));
+  }
+
+  .board-wrap {
+    padding: 0;
+    border-radius: 8px;
+  }
+
+  .board {
+    padding: 1px;
+    gap: 0;
+    border-radius: 5px;
+  }
+
+  .board-info {
+    margin-top: 2px;
+    gap: 6px;
+    padding: 3px 4px;
+    font-size: 0.7rem;
+  }
+
+  .board-info-title {
+    margin-right: 2px;
+  }
+}
