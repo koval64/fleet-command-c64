@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fleet Command C64</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bungee&family=Chakra+Petch:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="bg-grid" aria-hidden="true"></div>
+    <main class="app">
+      <section class="hud" aria-live="polite">
+        <div class="hud-strip">
+          <label class="difficulty-label" for="difficulty-select">AI</label>
+          <select id="difficulty-select" aria-label="AI difficulty">
+            <option value="easy">Easy</option>
+            <option value="normal" selected>Normal</option>
+            <option value="hard">Hard</option>
+          </select>
+          <span class="hud-status" id="status">Your phase. Pick a target.</span>
+          <button id="new-game-btn" type="button">New Game</button>
+        </div>
+      </section>
+
+      <section class="boards">
+        <article class="board-wrap" id="player-wrap">
+          <h3>Your Fleet</h3>
+          <div class="board" id="player-board" aria-label="Player board"></div>
+          <div class="board-info" aria-live="polite">
+            <span class="board-info-title">Player</span>
+            <span>Shots <span id="player-salvos">20</span></span>
+            <span>Hits <span id="player-hits">0</span></span>
+            <span>Sunk <span id="player-sunk">0</span>/5</span>
+          </div>
+        </article>
+
+        <article class="board-wrap" id="enemy-wrap">
+          <h3>Enemy Radar</h3>
+          <div class="board enemy" id="enemy-board" aria-label="Enemy board"></div>
+          <div class="board-info" aria-live="polite">
+            <span class="board-info-title">Enemy</span>
+            <span>Shots <span id="ai-salvos">20</span></span>
+            <span>Hits <span id="ai-hits">0</span></span>
+            <span>Sunk <span id="ai-sunk">0</span>/5</span>
+          </div>
+        </article>
+      </section>
+
+    </main>
+
+    <div id="end-overlay" class="end-overlay hidden" aria-live="polite" role="dialog" aria-modal="true">
+      <div class="end-card">
+        <h2 id="end-title">Battle Over</h2>
+        <p id="end-message">You win!</p>
+        <p id="end-score">Player hits: 0 | AI hits: 0</p>
+        <div class="end-actions">
+          <button id="rematch-btn" type="button">Rematch</button>
+          <button id="close-overlay-btn" type="button">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="game.js"></script>
+  </body>
+</html>
