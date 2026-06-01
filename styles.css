@@ -506,18 +506,18 @@ body {
 
   .boards.phase-player,
   .boards.phase-ai {
-    justify-items: stretch;
+    justify-items: center;
   }
 
   .boards.phase-player .board-wrap,
   .boards.phase-ai .board-wrap {
-    width: 100%;
-    margin: 0;
+    width: fit-content;
+    margin: 0 auto;
   }
 
   .boards.phase-player .board,
   .boards.phase-ai .board {
-    width: min(300px, calc(100dvw - 90px), calc(100dvh - 170px));
+    width: min(260px, calc(100dvw - 56px), calc(100dvh - 180px));
   }
 
   .board-wrap {
