@@ -1,7 +1,7 @@
 const GRID_SIZE = 10;
 const BOARD_CELLS = GRID_SIZE * GRID_SIZE;
-const SHOTS_PER_SHIP = 4;
-const SHIP_LENGTHS = [6, 5, 4, 3, 2];
+const SHOTS_PER_SHIP = 2;
+const SHIP_LENGTHS = [4, 3, 3, 2, 2, 2, 1, 1, 1, 1];
 const INITIAL_SALVOS = SHOTS_PER_SHIP * SHIP_LENGTHS.length;
 
 const state = {
@@ -204,10 +204,10 @@ function handleEnemyBoardClick(event) {
   if (plannedIndex >= 0) {
     state.playerShotPlan.splice(plannedIndex, 1);
     state.salvos.player += 1;
-    cell.classList.remove("planned");
     setStatus(
       `Target removed. Marked ${state.playerShotPlan.length}/${state.playerShotPlan.length + state.salvos.player}.`
     );
+    renderBoards();
     renderHud();
     return;
   }
@@ -220,11 +220,11 @@ function handleEnemyBoardClick(event) {
   state.playerShotPlan.push(idx);
   state.salvos.player -= 1;
   playSfx("mark");
-  cell.classList.add("planned");
   setStatus(
     `Target locked. Marked ${state.playerShotPlan.length}/${state.playerShotPlan.length + state.salvos.player}.`
   );
 
+  renderBoards();
   renderHud();
 
   if (state.salvos.player === 0) {
@@ -607,8 +607,12 @@ function renderBoards() {
       enemyCell.classList.add("hit");
     } else if (state.enemyBoard[i] === 3) {
       enemyCell.classList.add("miss");
-    } else if (state.playerShotPlan.includes(i)) {
-      enemyCell.classList.add("planned");
+    } else {
+      const plannedIndex = state.playerShotPlan.indexOf(i);
+      if (plannedIndex >= 0) {
+        enemyCell.classList.add("planned");
+        enemyCell.dataset.order = String(plannedIndex + 1);
+      }
     }
 
     applyShotEffectClass(enemyCell, "enemy", i);
